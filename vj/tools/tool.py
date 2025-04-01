@@ -1,5 +1,7 @@
-#!/usr/bin/env  python 
+#!/usr/bin/env  python
 import subprocess
+import math
+import re
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Union
 from dataclasses import dataclass
@@ -36,7 +38,7 @@ class CalculatorTool(Tool):
 
     def execute(self, expression: str) -> Any:
         """
-        Execute mathematical calculation using bc
+        Execute mathematical calculation using Python's eval (with safety constraints)
 
         Args:
             expression (str): Mathematical expression to evaluate
@@ -48,24 +50,39 @@ class CalculatorTool(Tool):
             ValueError: If expression is invalid or calculation fails
         """
         try:
-            # Create bc process with the expression
-            process = subprocess.Popen(
-                ["bc", "-l"],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-            )
+            # Clean the expression - strip list enumeration if present
+            expression = expression.strip()
 
-            # Send expression to bc and get result
-            output, error = process.communicate(input=expression)
+            # Remove list notation prefix if present (e.g., "1. " or "2. ")
+            if re.match(r"^\d+\.\s+", expression):
+                expression = re.sub(r"^\d+\.\s+", "", expression)
 
-            if error or process.returncode != 0:
-                raise ValueError(f"Calculation failed: {error}")
+            # Validate input (only allow basic math operations and numbers)
+            if not re.match(r"^[\d\s\+\-\*\/\(\)\.\^\%\,]*$", expression):
+                raise ValueError(
+                    f"Expression contains invalid characters: '{expression}'"
+                )
 
-            # Convert result to float
-            result = float(output.strip())
-            return result
+            # Create a safe environment with only math functions
+            safe_dict = {
+                "abs": abs,
+                "round": round,
+                "sin": math.sin,
+                "cos": math.cos,
+                "tan": math.tan,
+                "sqrt": math.sqrt,
+                "pow": math.pow,
+                "pi": math.pi,
+                "e": math.e,
+            }
 
-        except (subprocess.SubprocessError, ValueError) as e:
+            # Replace ^ with ** for exponentiation (common in calculators)
+            expression = expression.replace("^", "**")
+
+            # Evaluate the expression
+            result = eval(expression, {"__builtins__": {}}, safe_dict)
+            return float(result)
+
+        except Exception as e:
+            logger.error(f"Calculator error: {str(e)}")
             raise ValueError(f"Failed to evaluate expression '{expression}': {str(e)}")
