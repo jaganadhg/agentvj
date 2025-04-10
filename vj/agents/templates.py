@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Optional
 from loguru import logger
+from vj.tools.tool import Tool
 
 
 @dataclass
