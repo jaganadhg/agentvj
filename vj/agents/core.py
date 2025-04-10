@@ -5,27 +5,13 @@ from typing import Any, Dict, List, Optional, Union
 from dataclasses import dataclass
 
 from loguru import logger
+from vj.tools.tool import Tool
 
 
 class AgentMemory:
     """
     Handles agent's memory and conversation history
     """
-
-    def __init__(self):
-        self.steps = []
-        self.conversation = []
-
-    def add_step(self, step: dict):
-        self.steps.append(step)
-
-    def reset(self):
-        self.steps = []
-        self.conversation = []
-
-
-class AgentMemory:
-    """Handles agent's memory and conversation history"""
 
     def __init__(self):
         self.steps = []
