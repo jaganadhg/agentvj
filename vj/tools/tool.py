@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Union
 from dataclasses import dataclass
 
 from loguru import logger
+from vj.agents.core import BaseAgent
 
 
 class Tool:
